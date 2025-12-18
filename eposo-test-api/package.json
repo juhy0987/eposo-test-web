@@ -4,7 +4,7 @@
   "description": "API for eposo-test",
   "main": "dist/main.js",
   "scripts": {
-    "build": "prisma generate",
+    "build": "prisma generate && nest build",
     "start": "node dist/main.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "prisma:generate": "prisma generate",
