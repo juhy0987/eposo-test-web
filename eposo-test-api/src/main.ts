@@ -1,13 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+
+let app: INestApplication;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const nestApp = await NestFactory.create(AppModule);
 
-  app.enableCors();
-  app.setGlobalPrefix('api');
-  app.useGlobalPipes(
+  nestApp.enableCors();
+  nestApp.setGlobalPrefix('api');
+  nestApp.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Strips properties that do not have any decorators
       forbidNonWhitelisted: true, // Throw an error if non-whitelisted values are provided
@@ -15,6 +17,14 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT || 3000);
+  await nestApp.init();
+  return nestApp;
 }
-bootstrap();
+
+export default async (req, res) => {
+  if (!app) {
+    app = await bootstrap();
+  }
+  const expressApp = app.getHttpAdapter().getInstance();
+  return expressApp(req, res);
+};
