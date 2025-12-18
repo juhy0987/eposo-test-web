@@ -3,7 +3,12 @@
   "builds": [
     {
       "src": "eposo-test-api/package.json",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "eposo-test-api/prisma/schema.prisma"
+        ]
+      }
     },
     {
       "src": "eposo-test-web/package.json",
