@@ -8,7 +8,6 @@ async function bootstrap() {
   const nestApp = await NestFactory.create(AppModule);
 
   nestApp.enableCors();
-  nestApp.setGlobalPrefix('api');
   nestApp.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Strips properties that do not have any decorators
