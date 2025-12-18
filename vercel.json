@@ -21,7 +21,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "eposo-test-web/package.json"
+      "dest": "/index.html"
     }
   ]
 }
