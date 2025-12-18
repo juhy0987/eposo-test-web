@@ -19,7 +19,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "eposo-test-api/dist/main.js"
+      "dest": "eposo-test-api/src/main.ts"
     },
     {
       "handle": "filesystem"
