@@ -1,16 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "eposo-test-web/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "installCommand": "cd eposo-test-web && npm install",
+  "buildCommand": "cd eposo-test-web && npm run build",
+  "outputDirectory": "eposo-test-web/dist",
   "routes": [
     { "handle": "filesystem" },
-    { "src": ".*", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
