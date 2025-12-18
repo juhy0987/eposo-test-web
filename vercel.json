@@ -1,10 +1,30 @@
 {
   "version": 2,
-  "installCommand": "cd eposo-test-web && npm install",
-  "buildCommand": "cd eposo-test-web && npm run build",
-  "outputDirectory": "eposo-test-web/dist",
+  "builds": [
+    {
+      "src": "eposo-test-api/src/main.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["eposo-test-api/prisma/schema.prisma"]
+      }
+    },
+    {
+      "src": "eposo-test-web/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
   "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/api/(.*)",
+      "dest": "eposo-test-api/src/main.ts"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "index.html"
+    }
   ]
 }
