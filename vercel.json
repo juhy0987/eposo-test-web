@@ -1,4 +1,12 @@
 {
-  "buildCommand": "cd eposo-test-web && npm install && npm run build",
-  "outputDirectory": "eposo-test-web/dist"
+  "builds": [
+    {
+      "src": "eposo-test-web/package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": ".*", "dest": "/index.html" }
+  ]
 }
