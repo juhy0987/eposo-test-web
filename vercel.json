@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "eposo-test-api/src/main.ts",
+      "src": "eposo-test-api/package.json",
       "use": "@vercel/node"
     },
     {
