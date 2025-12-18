@@ -1,8 +1,12 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "eposo-test-web/package.json",
-      "use": "@vercel/static-build"
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
