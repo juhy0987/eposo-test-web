@@ -2,74 +2,138 @@
 
 ## Authentication Endpoints
 
-### `POST /api/auth/signup`
+### POST /auth/signup
+Create a new user account.
 
-Creates a new user account.
-
-#### Request Body
-
-The request body must be a JSON object with the following properties:
-
-| Field                  | Type   | Description                                           | Required |
-| ---------------------- | ------ | ----------------------------------------------------- | -------- |
-| `email`                | string | The user's email address. Must be unique.             | Yes      |
-| `password`             | string | The user's password. Must be at least 8 characters.   | Yes      |
-| `passwordConfirmation` | string | The user's password for confirmation. Must match `password`. | Yes      |
-
-**Example Request:**
-
+**Request Body:**
 ```json
 {
-  "email": "test@example.com",
+  "email": "user@example.com",
   "password": "password123",
   "passwordConfirmation": "password123"
 }
 ```
 
-#### Responses
+**Success Response (201 Created):**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
+}
+```
 
--   **`201 Created`**: The user was successfully created. The response body will contain the new user's data (excluding the password).
+**Error Responses:**
+- 409 Conflict: Email already in use
+- 400 Bad Request: Validation errors (password mismatch, invalid email, etc.)
 
-    **Example Response Body:**
+---
 
-    ```json
-    {
-      "id": 1,
-      "email": "test@example.com",
-      "createdAt": "2023-10-27T10:00:00.000Z",
-      "updatedAt": "2023-10-27T10:00:00.000Z"
-    }
-    ```
+### POST /auth/login
+Authenticate a user and receive access and refresh tokens.
 
--   **`400 Bad Request`**: The request body is invalid. This can be due to:
-    -   Missing fields.
-    -   Email is not in a valid format.
-    -   Password is less than 8 characters.
-    -   `password` and `passwordConfirmation` do not match.
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
 
-    The response body will contain an error message detailing the validation failures.
+**Success Response (200 OK):**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com"
+  }
+}
+```
 
-    **Example Error Response:**
+**Response Headers:**
+- `Set-Cookie: refreshToken=<token>; HttpOnly; Secure; SameSite=Strict; Max-Age=1209600`
 
-    ```json
-    {
-      "message": [
-        "password must be at least 8 characters long.",
-        "Password and password confirmation do not match."
-      ],
-      "error": "Bad Request",
-      "statusCode": 400
-    }
-    ```
+**Error Responses:**
+- 401 Unauthorized: "No account found with this email address."
+- 401 Unauthorized: "Invalid password. X attempt(s) remaining before account lock."
+- 401 Unauthorized: "Account locked for 10 minutes due to too many failed login attempts."
+- 401 Unauthorized: "Account is locked due to too many failed login attempts. Please try again in X minute(s)."
 
--   **`409 Conflict`**: The provided email address is already in use.
+**Security Features:**
+- Access token expires in 1 hour
+- Refresh token expires in 14 days (stored in HttpOnly cookie)
+- Account locked for 10 minutes after 5 consecutive failed login attempts
+- Failed login attempts are reset upon successful login
+- Distinct error messages for non-existent accounts vs. invalid passwords
 
-    **Example Error Response:**
+---
 
-    ```json
-    {
-      "message": "Email already in use.",
-      "error": "Conflict",
-      "statusCode": 409
-    }
-    ```
+### POST /auth/logout
+Logout a user by clearing the refresh token cookie.
+
+**Request:**
+No body required. Must include cookies in request.
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**Response Headers:**
+- `Set-Cookie: refreshToken=; HttpOnly; Secure; SameSite=Strict; Max-Age=0` (clears the cookie)
+
+---
+
+## Authentication Flow
+
+1. **Sign Up:** Create a new account via `/auth/signup`
+2. **Login:** Authenticate via `/auth/login` to receive:
+   - Access token (in response body) - valid for 1 hour
+   - Refresh token (in HttpOnly cookie) - valid for 14 days
+3. **Authenticated Requests:** Include access token in Authorization header:
+   ```
+   Authorization: Bearer <accessToken>
+   ```
+4. **Logout:** Call `/auth/logout` to clear refresh token cookie
+
+---
+
+## Security Considerations
+
+### Account Locking
+- After 5 failed login attempts, the account is locked for 10 minutes
+- Countdown shows remaining time when attempting to login during lock period
+- Failed attempts counter resets upon successful login
+- Account automatically unlocks after 10 minutes
+
+### Token Management
+- **Access Token:** Short-lived (1 hour), sent in response body, stored on client
+- **Refresh Token:** Long-lived (14 days), stored in HttpOnly cookie, cannot be accessed by JavaScript
+- Refresh tokens are automatically sent with requests via cookies
+- Access tokens must be manually attached to Authorization header
+
+### Password Requirements
+- Minimum 8 characters
+- No specific complexity requirements (can be enhanced as needed)
+
+### CORS Configuration
+- Credentials (cookies) are enabled
+- Configure allowed origins for production deployment
+
+---
+
+## Environment Variables
+
+Required environment variables in `.env`:
+
+```env
+DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
+JWT_ACCESS_SECRET="your-access-token-secret-key"
+JWT_REFRESH_SECRET="your-refresh-token-secret-key"
+```
+
+**Important:** Change JWT secrets in production to secure random strings.
