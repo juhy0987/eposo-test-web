@@ -14,4 +14,33 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  uploads   Upload[]
+}
+
+model Upload {
+  id              String   @id @default(uuid())
+  userId          Int?
+  filename        String
+  originalName    String
+  mimeType        String
+  totalSize       BigInt
+  totalChunks     Int
+  uploadedChunks  Int      @default(0)
+  status          String   @default("uploading") // uploading, completed, failed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  completedAt     DateTime?
+  user            User?    @relation(fields: [userId], references: [id])
+  chunks          UploadChunk[]
+}
+
+model UploadChunk {
+  id         Int      @id @default(autoincrement())
+  uploadId   String
+  chunkIndex Int
+  size       Int
+  createdAt  DateTime @default(now())
+  upload     Upload   @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@unique([uploadId, chunkIndex])
 }
